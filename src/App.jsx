@@ -1,16 +1,32 @@
-
-import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import RestaurantDetails from "./pages/RestaurantDetails";
+import Navbar from "./components/Navbar";
 
 function App() {
- 
+    return (
+        <BrowserRouter>
+        <Navbar/>
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <h1 className="text-4xl font-bold text-red-600">
-        Restaurant Reservation
-      </h1>
-    </div>
-  )
+      <Routes>
+
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route path="/" element={<Home />} />
+        {/* Restaurant Listing Page */} 
+        <Route path="/restaurants" element={<Home />} />
+
+        <Route
+          path="/restaurants/:id"
+          element={<RestaurantDetails />}
+        />
+
+      </Routes>
+    </BrowserRouter>
+    );
 }
 
-export default App
+export default App;
