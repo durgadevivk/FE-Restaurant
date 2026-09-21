@@ -37,3 +37,13 @@ export const deleteReview = async (id) => {
 
   return response.data;
 };
+// adding owner response
+export const addOwnerResponse = async (id, responseText) => {
+  const response = await api.patch(
+    `/review/${id}/owner-response`,
+    {
+      response: responseText
+    }
+  );
+   return response.data;
+};

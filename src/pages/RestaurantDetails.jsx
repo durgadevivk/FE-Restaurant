@@ -1,21 +1,26 @@
 // pages/RestaurantDetails.jsx
 
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { getRestaurantById } from "../services/restaurantService";
 import {
   checkAvailability,
-  createReservation
+  createReservation,
 } from "../services/reservationService";
 import {
   getRestaurantReviews,
   createReview,
   updateReview,
-  deleteReview
+  deleteReview,
 } from "../services/reviewService";
+import ReviewForm from "../components/ReviewForm";
+import ReviewList from "../components/ReviewList";
 
 const RestaurantDetails = () => {
   const { id } = useParams();
+  const user = useSelector((state) => state.auth.user);
+  console.log("RestaurantDetails user:", user);
 
   const [restaurant, setRestaurant] = useState(null);
   const [date, setDate] = useState("");
@@ -25,22 +30,20 @@ const RestaurantDetails = () => {
   const [availability, setAvailability] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({
-  rating: 5,
-  comment: "",
-  photos: []
-});
-const [editingReviewId, setEditingReviewId] = useState(null);
+    rating: 5,
+    comment: "",
+    photos: [],
+  });
+  const [editingReviewId, setEditingReviewId] = useState(null);
 
-
-const fetchReviews = async () => {
-  try {
-    const data = await getRestaurantReviews(id);
-    setReviews(data.reviews || []);
-  } catch (error) {
-    console.error("Failed to fetch reviews", error);
-  }
-};
-
+  const fetchReviews = async () => {
+    try {
+      const data = await getRestaurantReviews(id);
+      setReviews(data.reviews || []);
+    } catch (error) {
+      console.error("Failed to fetch reviews", error);
+    }
+  };
 
   const fetchRestaurant = async () => {
     const data = await getRestaurantById(id);
@@ -48,130 +51,118 @@ const fetchReviews = async () => {
   };
 
   const handleCheckAvailability = async () => {
-  try {
-    const data = await checkAvailability({
-      restaurantId: id,
-      date,
-      time,
-      partySize,
-    });
+    try {
+      const data = await checkAvailability({
+        restaurantId: id,
+        date,
+        time,
+        partySize,
+      });
 
-    setAvailability(data);
-  } catch (error) {
-    console.error(error);
-  }
-};
+      setAvailability(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const bookTable = async () => {
-  try {
-    await createReservation({
-      restaurantId: id,
-      date,
-      time,
-      partySize,
-    });
+    try {
+      await createReservation({
+        restaurantId: id,
+        date,
+        time,
+        partySize,
+      });
 
-    alert("Table booked successfully!");
-  } catch (error) {
-    alert(error.response?.data?.message || "Booking failed");
-  }
-};
-const handleReviewSubmit = async (e) => {
-  e.preventDefault();
+      alert("Table booked successfully!");
+    } catch (error) {
+      alert(error.response?.data?.message || "Booking failed");
+    }
+  };
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
 
-  try {
-    await createReview({
-      restaurantId: id,
-      rating: Number(reviewForm.rating),
-      comment: reviewForm.comment,
-      photos: reviewForm.photos
-    });
+    try {
+      await createReview({
+        restaurantId: id,
+        rating: Number(reviewForm.rating),
+        comment: reviewForm.comment,
+        photos: reviewForm.photos,
+      });
 
-    alert("Review added successfully!");
+      alert("Review added successfully!");
 
-    setReviewForm({
-      rating: 5,
-      comment: "",
-      photos: []
-    });
+      setReviewForm({
+        rating: 5,
+        comment: "",
+        photos: [],
+      });
 
-    fetchReviews();
+      fetchReviews();
+    } catch (error) {
+      console.error("Failed to create review", error);
 
-  } catch (error) {
-    console.error("Failed to create review", error);
+      alert(error.response?.data?.message || "Failed to add review");
+    }
+  };
 
-    alert(
-      error.response?.data?.message ||
-      "Failed to add review"
-    );
-  }
-};
-  
-const handleEditReview = (review) => {
-  setEditingReviewId(review._id);
-
-  setReviewForm({
-    rating: review.rating,
-    comment: review.comment,
-    photos: review.photos || []
-  });
-};
-const handleUpdateReview = async (e) => {
-  e.preventDefault();
-
-  try {
-    await updateReview(editingReviewId, {
-      rating: Number(reviewForm.rating),
-      comment: reviewForm.comment,
-      photos: reviewForm.photos
-    });
-
-    alert("Review updated successfully");
-
-    setEditingReviewId(null);
+  const handleEditReview = (review) => {
+    setEditingReviewId(review._id);
 
     setReviewForm({
-      rating: 5,
-      comment: "",
-      photos: []
+      rating: review.rating,
+      comment: review.comment,
+      photos: review.photos || [],
     });
+  };
+  const handleUpdateReview = async (e) => {
+    e.preventDefault();
 
-    fetchReviews();
+    try {
+      await updateReview(editingReviewId, {
+        rating: Number(reviewForm.rating),
+        comment: reviewForm.comment,
+        photos: reviewForm.photos,
+      });
 
-  } catch (error) {
-    console.error("Failed to update review", error);
+      alert("Review updated successfully");
 
-    alert(
-      error.response?.data?.message ||
-      "Failed to update review"
+      setEditingReviewId(null);
+
+      setReviewForm({
+        rating: 5,
+        comment: "",
+        photos: [],
+      });
+
+      fetchReviews();
+    } catch (error) {
+      console.error("Failed to update review", error);
+
+      alert(error.response?.data?.message || "Failed to update review");
+    }
+  };
+  const handleDeleteReview = async (reviewId) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this review?",
     );
-  }
-};
-const handleDeleteReview = async (reviewId) => {
-  const confirmed = window.confirm(
-    "Are you sure you want to delete this review?"
-  );
 
-  if (!confirmed) {
-    return;
-  }
+    if (!confirmed) {
+      return;
+    }
 
-  try {
-    await deleteReview(reviewId);
+    try {
+      await deleteReview(reviewId);
 
-    alert("Review deleted successfully");
+      alert("Review deleted successfully");
 
-    fetchReviews();
+      fetchReviews();
+    } catch (error) {
+      console.error("Failed to delete review", error);
 
-  } catch (error) {
-    console.error("Failed to delete review", error);
-
-    alert(
-      error.response?.data?.message ||
-      "Failed to delete review"
-    );
-  }
-};
+      alert(error.response?.data?.message || "Failed to delete review");
+    }
+  };
   useEffect(() => {
     fetchRestaurant();
     fetchReviews();
@@ -180,41 +171,85 @@ const handleDeleteReview = async (reviewId) => {
   if (!restaurant) {
     return <p>Loading...</p>;
   }
-  
 
   return (
     <div className="container mx-auto p-6">
-
       <img
         src={restaurant.image}
         alt={restaurant.name}
         className="w-full h-64 object-cover rounded-lg"
       />
 
-      <h1 className="text-3xl font-bold mt-6">
-        {restaurant.name}
-      </h1>
+      {/* Restaurant Profile Information */}
+      <div className="mt-6 mb-4 border rounded-lg p-6">
+        <h1 className="text-3xl font-bold">{restaurant.name}</h1>
 
-      <p className="text-gray-600 mt-2">
-        {restaurant.description}
-      </p>
+        <p className="text-gray-600 mt-2">{restaurant.description}</p>
 
-      <p className="mt-2">
-        Cuisine: {restaurant.cuisine}
-      </p>
+        <div className="grid md:grid-cols-2 gap-4 mt-6">
+          <div>
+            <p className="font-semibold">Cuisine</p>
+            <p className="text-gray-600">{restaurant.cuisine}</p>
+          </div>
 
-      <p>
-        Location: {restaurant.location}
-      </p>
+          <div>
+            <p className="font-semibold">Location</p>
+            <p className="text-gray-600">{restaurant.location}</p>
+          </div>
 
+          <div>
+            <p className="font-semibold">Price Range</p>
+            <p className="text-gray-600">₹{restaurant.priceRange}</p>
+          </div>
+
+          <div>
+            <p className="font-semibold">Opening Hours</p>
+            <p className="text-gray-600">
+              {restaurant.openingHours || "Not available"}
+            </p>
+          </div>
+
+          <div>
+            <p className="font-semibold">Contact</p>
+            <p className="text-gray-600">
+              {restaurant.contactNumber || "Not available"}
+            </p>
+          </div>
+
+          <div>
+            <p className="font-semibold">Rating</p>
+            <p className="text-gray-600">⭐ {restaurant.averageRating || 0}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* Restaurant Menu */}
+      <div className="border rounded-lg p-6 mb-8">
+        <h2 className="text-2xl font-bold mb-4">Menu</h2>
+
+        {restaurant.menu && restaurant.menu.length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-4">
+            {restaurant.menu.map((item, index) => (
+              <div key={item._id || index} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold text-lg">{item.name}</h3>
+
+                  <span className="font-semibold">₹{item.price}</span>
+                </div>
+
+                <p className="text-gray-600 mt-2">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-600">Menu information is not available.</p>
+        )}
+      </div>
       <hr className="my-6" />
 
-      <h2 className="text-2xl font-bold mb-4">
-        Book Your Table
-      </h2>
+      <h2 className="text-2xl font-bold mb-4">Book Your Table</h2>
 
       <div className="grid md:grid-cols-3 gap-4">
-
         <input
           type="date"
           value={date}
@@ -242,19 +277,17 @@ const handleDeleteReview = async (reviewId) => {
           onChange={(e) => setPartySize(Number(e.target.value))}
           className="border p-3 rounded"
         />
-
       </div>
 
       <button
-  onClick={handleCheckAvailability}
-  className="bg-green-600 text-white px-6 py-3 rounded mt-4"
->
-  Check Availability
-</button>
+        onClick={handleCheckAvailability}
+        className="bg-green-600 text-white px-6 py-3 rounded mt-4"
+      >
+        Check Availability
+      </button>
 
       {availability && (
         <div className="mt-4 p-4 bg-gray-100 rounded">
-
           {availability.available ? (
             <p className="text-green-600 font-bold">
               Table Available! You can book now.
@@ -264,7 +297,6 @@ const handleDeleteReview = async (reviewId) => {
               Sorry, no availability for this time.
             </p>
           )}
-
         </div>
       )}
 
@@ -277,169 +309,21 @@ const handleDeleteReview = async (reviewId) => {
         </button>
       )}
       <hr className="my-8" />
-
-<h2 className="text-2xl font-bold mb-4">
-  Write a Review
-</h2>
-
-<form
-  onSubmit={editingReviewId
-      ? handleUpdateReview
-      : handleReviewSubmit}
-  className="border rounded-lg p-6 mb-8"
->
-  <div className="mb-4">
-
-    <label className="block font-semibold mb-2">
-      Rating
-    </label>
-
-    <select
-      value={reviewForm.rating}
-      onChange={(e) =>
-        setReviewForm({
-          ...reviewForm,
-          rating: Number(e.target.value)
-        })
-      }
-      className="border p-3 rounded"
-    >
-      <option value="5">⭐⭐⭐⭐⭐ 5</option>
-      <option value="4">⭐⭐⭐⭐ 4</option>
-      <option value="3">⭐⭐⭐ 3</option>
-      <option value="2">⭐⭐ 2</option>
-      <option value="1">⭐ 1</option>
-    </select>
-
-  </div>
-
-  <div className="mb-4">
-
-    <label className="block font-semibold mb-2">
-      Comment
-    </label>
-
-    <textarea
-      value={reviewForm.comment}
-      onChange={(e) =>
-        setReviewForm({
-          ...reviewForm,
-          comment: e.target.value
-        })
-      }
-      placeholder="Share your dining experience..."
-      className="border p-3 rounded w-full"
-      rows="4"
-      required
-    />
-
-  </div>
-
-  <div className="mb-4">
-
-    <label className="block font-semibold mb-2">
-      Photo URLs
-    </label>
-
-    <input
-      type="text"
-      placeholder="Enter image URL"
-      className="border p-3 rounded w-full"
-      onChange={(e) =>
-        setReviewForm({
-          ...reviewForm,
-          photos: e.target.value
-            ? [e.target.value]
-            : []
-        })
-      }
-    />
-
-  </div>
-
- <button
-  type="submit"
-  className="bg-purple-600 text-white px-6 py-3 rounded"
->
-  {editingReviewId ? "Update Review" : "Submit Review"}
-</button>
- {/* Cancel Edit */}
-  {editingReviewId && (
-    <button
-      type="button"
-      onClick={() => {
-        setEditingReviewId(null);
-
-        setReviewForm({
-          rating: 5,
-          comment: "",
-          photos: []
-        });
-      }}
-      className="ml-2 bg-gray-400 text-white px-6 py-3 rounded"
-    >
-      Cancel Edit
-    </button>
-  )}
-</form>
-<h2 className="text-2xl font-bold mb-4">
-  Customer Reviews
-</h2>
-
-{reviews.length === 0 ? (
-  <p className="text-gray-600">
-    No reviews yet. Be the first to review!
-  </p>
-) : (
-  <div className="space-y-4">
-
-    {reviews.map((review) => (
-      <div
-        key={review._id}
-        className="border rounded-lg p-5"
-      >
-
-        <div className="flex justify-between">
-
-          <h3 className="font-bold">
-            {review.user?.name || "User"}
-          </h3>
-
-          <span>
-            {"⭐".repeat(review.rating)}
-          </span>
-
-        </div>
-
-        <p className="mt-2 text-gray-700">
-          {review.comment}
-        </p>
-
-        {review.photos?.length > 0 && (
-          <div className="flex gap-3 mt-4">
-
-            {review.photos.map((photo, index) => (
-              <img
-                key={index}
-                src={photo}
-                alt="Review"
-                className="w-24 h-24 object-cover rounded"
-              />
-            ))}
-
-          </div>
-        )}
-
-        <p className="text-sm text-gray-500 mt-3">
-          {new Date(review.createdAt).toLocaleDateString()}
-        </p>
-
-      </div>
-    ))}
-
-  </div>
-)}
-
+      <ReviewForm
+        reviewForm={reviewForm}
+        setReviewForm={setReviewForm}
+        editingReviewId={editingReviewId}
+        handleReviewSubmit={handleReviewSubmit}
+        handleUpdateReview={handleUpdateReview}
+        setEditingReviewId={setEditingReviewId}
+      />
+      <ReviewList
+        reviews={reviews}
+        user={user}
+        handleEditReview={handleEditReview}
+        handleDeleteReview={handleDeleteReview}
+        fetchReviews={fetchReviews}
+      />
     </div>
   );
 };
