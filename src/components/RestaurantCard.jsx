@@ -6,7 +6,7 @@ const RestaurantCard = ({ restaurant }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
       <img
-        src={restaurant.imageUrl}
+        src={restaurant.image}
         alt={restaurant.name}
         className="w-full h-48 object-cover"
       />

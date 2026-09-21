@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { loginUser } from "../services/authService";
+import { loginUser, getCurrentUser } from "../services/authService";
 import { setUser } from "../redux/authSlice";
 import { toast } from "react-toastify";
 
@@ -14,34 +14,43 @@ const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
+   const handleLogin = async (e) => {
+    e.preventDefault();
 
-        try {
-            const response = await loginUser(formData);
+    try {
+        const response = await loginUser(formData);
 
-            dispatch(setUser(response.user));
+        toast.success(response.message || "Login successful");
 
-            toast.success(response.message || "Login successful");
+        // Get logged-in user from backend
+        const userResponse = await getCurrentUser();
 
-            if (response.user.role === "admin") {
-                navigate("/admin/dashboard");
-            } else if (response.user.role === "restaurant_owner") {
-                navigate("/owner/dashboard");
-            } else {
-                navigate("/dashboard");
-            }
+        const user = userResponse.user;
 
-        } catch (error) {
-            const errorMessage =
-                error.response?.data?.message ||
-                error.message ||
-                "Login failed";
+        // Store user in Redux
+        dispatch(setUser(user));
 
-            toast.error(errorMessage);
+        console.log("Logged in user:", user);
+        console.log("Role:", user.role);
+
+        // Navigate based on role
+        if (user.role === "admin") {
+            navigate("/admin/dashboard");
+        } else if (user.role === "restaurant_owner") {
+            navigate("/owner/dashboard");
+        } else {
+            navigate("/dashboard");
         }
-    };
 
+    } catch (error) {
+        const errorMessage =
+            error.response?.data?.message ||
+            error.message ||
+            "Login failed";
+
+        toast.error(errorMessage);
+    }
+};
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">

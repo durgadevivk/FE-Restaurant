@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getRestaurantById } from "../services/restaurantService";
-import axios from "axios";
+import {
+  checkAvailability,
+  createReservation
+} from "../services/reservationService";
 
 const RestaurantDetails = () => {
   const { id } = useParams();
@@ -24,51 +27,35 @@ const RestaurantDetails = () => {
     setRestaurant(data.restaurant || data);
   };
 
-  const checkAvailability = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:5000/api/v1/reservations/availability",
-        {
-          params: {
-            restaurantId: id,
-            date,
-            time,
-            partySize,
-          },
-        }
-      );
+  const handleCheckAvailability = async () => {
+  try {
+    const data = await checkAvailability({
+      restaurantId: id,
+      date,
+      time,
+      partySize,
+    });
 
-      setAvailability(response.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    setAvailability(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const bookTable = async () => {
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    await createReservation({
+      restaurantId: id,
+      date,
+      time,
+      partySize,
+    });
 
-      await axios.post(
-        "http://localhost:5000/api/v1/reservations",
-        {
-          restaurantId: id,
-          date,
-          time,
-          partySize,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      alert("Table booked successfully!");
-
-    } catch (error) {
-      alert(error.response?.data?.message || "Booking failed");
-    }
-  };
+    alert("Table booked successfully!");
+  } catch (error) {
+    alert(error.response?.data?.message || "Booking failed");
+  }
+};
 
   if (!restaurant) {
     return <p>Loading...</p>;
@@ -78,7 +65,7 @@ const RestaurantDetails = () => {
     <div className="container mx-auto p-6">
 
       <img
-        src={restaurant.imageUrl}
+        src={restaurant.image}
         alt={restaurant.name}
         className="w-full h-64 object-cover rounded-lg"
       />
@@ -138,11 +125,11 @@ const RestaurantDetails = () => {
       </div>
 
       <button
-        onClick={checkAvailability}
-        className="bg-green-600 text-white px-6 py-3 rounded mt-4"
-      >
-        Check Availability
-      </button>
+  onClick={handleCheckAvailability}
+  className="bg-green-600 text-white px-6 py-3 rounded mt-4"
+>
+  Check Availability
+</button>
 
       {availability && (
         <div className="mt-4 p-4 bg-gray-100 rounded">

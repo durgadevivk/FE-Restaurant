@@ -1,5 +1,3 @@
-// pages/Home.jsx
-
 import { useEffect, useState } from "react";
 import RestaurantCard from "../components/RestaurantCard";
 import { getRestaurants } from "../services/restaurantService";
@@ -9,6 +7,7 @@ const Home = () => {
   const [search, setSearch] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [location, setLocation] = useState("");
+  const [priceRange, setPriceRange] = useState("");
 
   useEffect(() => {
     fetchRestaurants();
@@ -20,7 +19,10 @@ const Home = () => {
         search,
         cuisine,
         location,
+        priceRange,
       });
+
+      console.log("Restaurant API Response:", data);
 
       setRestaurants(data.restaurants || data);
     } catch (error) {
@@ -36,8 +38,9 @@ const Home = () => {
       </h1>
 
       {/* Search Filters */}
-      <div className="grid md:grid-cols-3 gap-4 mb-8">
+      <div className="grid md:grid-cols-4 gap-4 mb-8">
 
+        {/* Search */}
         <input
           type="text"
           placeholder="Search restaurants..."
@@ -46,6 +49,7 @@ const Home = () => {
           className="border p-3 rounded"
         />
 
+        {/* Cuisine */}
         <select
           value={cuisine}
           onChange={(e) => setCuisine(e.target.value)}
@@ -56,8 +60,28 @@ const Home = () => {
           <option value="Chinese">Chinese</option>
           <option value="Italian">Italian</option>
           <option value="Mexican">Mexican</option>
+          <option value="Seafood">Seafood</option>
+          <option value="Vegetarian">Vegetarian</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Cafe">Cafe</option>
+          <option value="Punjabi">Punjabi</option>
+          <option value="Healthy">Healthy</option>
         </select>
 
+        {/* Price Range */}
+        <select
+          value={priceRange}
+          onChange={(e) => setPriceRange(e.target.value)}
+          className="border p-3 rounded"
+        >
+          <option value="">All Price Ranges</option>
+          <option value="100-500">₹100 - ₹500</option>
+          <option value="501-1000">₹501 - ₹1000</option>
+          <option value="1001-5000">₹1001 - ₹5000</option>
+          <option value="10000">₹10000+</option>
+        </select>
+
+        {/* Location */}
         <input
           type="text"
           placeholder="Location"
@@ -68,6 +92,7 @@ const Home = () => {
 
       </div>
 
+      {/* Search Button */}
       <button
         onClick={fetchRestaurants}
         className="bg-blue-600 text-white px-6 py-2 rounded mb-6"
@@ -96,3 +121,4 @@ const Home = () => {
 };
 
 export default Home;
+
