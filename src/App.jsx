@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import RestaurantDetails from "./pages/RestaurantDetails";
 import MyReservation from "./pages/MyReservation";
 import Navbar from "./components/Navbar";
+import OwnerDashboard from "./pages/OwnerDashboard";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Navbar />
 
       <Routes>
+        
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -21,6 +23,7 @@ function App() {
 
         <Route path="/restaurants/:id" element={<RestaurantDetails />} />
         <Route path="/my-reservations" element={<MyReservation />} />
+        <Route path="/owner-dashboard" element={<OwnerDashboard />} />
       </Routes>
     </BrowserRouter>
   );
