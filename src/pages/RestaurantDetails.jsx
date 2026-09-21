@@ -9,7 +9,9 @@ import {
 } from "../services/reservationService";
 import {
   getRestaurantReviews,
-  createReview
+  createReview,
+  updateReview,
+  deleteReview
 } from "../services/reviewService";
 
 const RestaurantDetails = () => {
@@ -27,6 +29,9 @@ const RestaurantDetails = () => {
   comment: "",
   photos: []
 });
+const [editingReviewId, setEditingReviewId] = useState(null);
+
+
 const fetchReviews = async () => {
   try {
     const data = await getRestaurantReviews(id);
@@ -102,6 +107,71 @@ const handleReviewSubmit = async (e) => {
   }
 };
   
+const handleEditReview = (review) => {
+  setEditingReviewId(review._id);
+
+  setReviewForm({
+    rating: review.rating,
+    comment: review.comment,
+    photos: review.photos || []
+  });
+};
+const handleUpdateReview = async (e) => {
+  e.preventDefault();
+
+  try {
+    await updateReview(editingReviewId, {
+      rating: Number(reviewForm.rating),
+      comment: reviewForm.comment,
+      photos: reviewForm.photos
+    });
+
+    alert("Review updated successfully");
+
+    setEditingReviewId(null);
+
+    setReviewForm({
+      rating: 5,
+      comment: "",
+      photos: []
+    });
+
+    fetchReviews();
+
+  } catch (error) {
+    console.error("Failed to update review", error);
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to update review"
+    );
+  }
+};
+const handleDeleteReview = async (reviewId) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this review?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await deleteReview(reviewId);
+
+    alert("Review deleted successfully");
+
+    fetchReviews();
+
+  } catch (error) {
+    console.error("Failed to delete review", error);
+
+    alert(
+      error.response?.data?.message ||
+      "Failed to delete review"
+    );
+  }
+};
   useEffect(() => {
     fetchRestaurant();
     fetchReviews();
@@ -213,7 +283,9 @@ const handleReviewSubmit = async (e) => {
 </h2>
 
 <form
-  onSubmit={handleReviewSubmit}
+  onSubmit={editingReviewId
+      ? handleUpdateReview
+      : handleReviewSubmit}
   className="border rounded-lg p-6 mb-8"
 >
   <div className="mb-4">
@@ -285,13 +357,30 @@ const handleReviewSubmit = async (e) => {
 
   </div>
 
-  <button
-    type="submit"
-    className="bg-purple-600 text-white px-6 py-3 rounded"
-  >
-    Submit Review
-  </button>
+ <button
+  type="submit"
+  className="bg-purple-600 text-white px-6 py-3 rounded"
+>
+  {editingReviewId ? "Update Review" : "Submit Review"}
+</button>
+ {/* Cancel Edit */}
+  {editingReviewId && (
+    <button
+      type="button"
+      onClick={() => {
+        setEditingReviewId(null);
 
+        setReviewForm({
+          rating: 5,
+          comment: "",
+          photos: []
+        });
+      }}
+      className="ml-2 bg-gray-400 text-white px-6 py-3 rounded"
+    >
+      Cancel Edit
+    </button>
+  )}
 </form>
 <h2 className="text-2xl font-bold mb-4">
   Customer Reviews
