@@ -8,7 +8,7 @@ const Register = () => {
         name: "",
         email: "",
         password: "",
-        role: "customer"
+        role: "user"
     });
 
     const navigate = useNavigate();
