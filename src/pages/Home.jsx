@@ -8,6 +8,9 @@ const Home = () => {
   const [cuisine, setCuisine] = useState("");
   const [location, setLocation] = useState("");
   const [priceRange, setPriceRange] = useState("");
+  const [dietary, setDietary] = useState("");
+  const [ambiance, setAmbiance] = useState("");
+  const [specialFeatures, setSpecialFeatures] = useState("");
 
   useEffect(() => {
     fetchRestaurants();
@@ -15,31 +18,68 @@ const Home = () => {
 
   const fetchRestaurants = async () => {
     try {
+       console.log("Filters being sent:", {
+      search,
+      cuisine,
+      location,
+      priceRange,
+      dietary,
+      ambiance,
+      specialFeatures,
+    });
       const data = await getRestaurants({
         search,
         cuisine,
         location,
         priceRange,
+        dietary,
+        ambiance,
+        specialFeatures,
       });
-
-      console.log("Restaurant API Response:", data);
 
       setRestaurants(data.restaurants || data);
     } catch (error) {
       console.error(error);
     }
   };
+  const recommendedRestaurants = [...restaurants]
+  .filter((restaurant) => {
+    if (cuisine && !restaurant.cuisine?.toLowerCase().includes(cuisine.toLowerCase())) {
+      return false;
+    }
+
+    if (
+      dietary &&
+      !restaurant.dietaryOptions?.includes(dietary)
+    ) {
+      return false;
+    }
+
+    if (
+      ambiance &&
+      !restaurant.ambiance?.includes(ambiance)
+    ) {
+      return false;
+    }
+
+    if (
+      specialFeatures &&
+      !restaurant.specialFeatures?.includes(specialFeatures)
+    ) {
+      return false;
+    }
+
+    return true;
+  })
+  .sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0))
+  .slice(0, 3);
 
   return (
     <div className="container mx-auto p-6">
-
-      <h1 className="text-3xl font-bold mb-6">
-        Find Your Perfect Restaurant
-      </h1>
+      <h1 className="text-3xl font-bold mb-6">Find Your Perfect Restaurant</h1>
 
       {/* Search Filters */}
-      <div className="grid md:grid-cols-4 gap-4 mb-8">
-
+      <div className="grid md:grid-cols-7 gap-4 mb-8">
         {/* Search */}
         <input
           type="text"
@@ -90,6 +130,38 @@ const Home = () => {
           className="border p-3 rounded"
         />
 
+        <select
+          value={dietary}
+          onChange={(e) => setDietary(e.target.value)}
+          className="border p-3 rounded"
+        >
+          <option value="">Dietary</option>
+          <option value="Vegetarian">Vegetarian</option>
+          <option value="Vegan">Vegan</option>
+          <option value="Gluten-Free">Gluten-Free</option>
+          <option value="Jain">Jain</option>
+        </select>
+        <select
+          value={ambiance}
+          onChange={(e) => setAmbiance(e.target.value)}
+          className="border p-3 rounded"
+        >
+          <option value="">Ambiance</option>
+          <option value="Romantic">Romantic</option>
+          <option value="Casual">Casual</option>
+          <option value="Family">Family</option>
+          <option value="Fine Dining">Fine Dining</option>
+        </select>
+        <select
+          value={specialFeatures}
+          onChange={(e) => setSpecialFeatures(e.target.value)}
+        className="border p-3 rounded">
+          <option value="">Special Features</option>
+          <option value="Outdoor Seating">Outdoor Seating</option>
+          <option value="Live Music">Live Music</option>
+          <option value="Parking">Parking</option>
+          <option value="WiFi">WiFi</option>
+        </select>
       </div>
 
       {/* Search Button */}
@@ -100,25 +172,39 @@ const Home = () => {
         Search
       </button>
 
+      {/* Recommended Restaurants */}
+      {recommendedRestaurants.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold mb-4">
+            Recommended Restaurants ⭐
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {recommendedRestaurants.map((restaurant) => (
+              <RestaurantCard key={restaurant._id} restaurant={restaurant} />
+            ))}
+          </div>
+        </div>
+      )}
       {/* Restaurant Grid */}
       <div className="grid md:grid-cols-3 gap-6">
-
         {restaurants.length > 0 ? (
-          restaurants.map((restaurant) => (
-            <RestaurantCard
-              key={restaurant._id}
-              restaurant={restaurant}
-            />
-          ))
+          restaurants
+            .filter(
+              (restaurant) =>
+                !recommendedRestaurants.some(
+                  (recommended) => recommended._id === restaurant._id,
+                ),
+            )
+            .map((restaurant) => (
+              <RestaurantCard key={restaurant._id} restaurant={restaurant} />
+            ))
         ) : (
           <p>No restaurants found.</p>
         )}
-
       </div>
-
     </div>
   );
 };
 
 export default Home;
-

@@ -11,6 +11,8 @@ export const checkAvailability = async (data) => {
 };
 
 export const createReservation = async (data) => {
+    console.log("Sending reservation data:", data);
+    console.log("API base URL:", api.defaults.baseURL);
     const response = await api.post("/reservation", data);
 
     return response.data;
