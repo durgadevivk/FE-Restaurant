@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 import { getRestaurantById } from "../services/restaurantService";
 
@@ -25,6 +25,7 @@ import ReviewList from "../components/ReviewList";
 
 const RestaurantDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const user = useSelector((state) => state.auth.user);
 
@@ -64,8 +65,8 @@ const RestaurantDetails = () => {
     try {
       const data = await getRestaurantById(id);
       console.log("URL ID:", id);
-console.log("Restaurant returned from backend:", data.restaurant);
-console.log("Restaurant ID returned:", data.restaurant._id);    
+      console.log("Restaurant returned from backend:", data.restaurant);
+      console.log("Restaurant ID returned:", data.restaurant._id);
       setRestaurant(data.restaurant || data);
     } catch (error) {
       console.error("Failed to fetch restaurant", error);
@@ -136,6 +137,8 @@ console.log("Restaurant ID returned:", data.restaurant._id);
             console.log("Reservation created:", reservationData);
 
             alert("Payment successful and reservation confirmed!");
+            navigate("/my-reservations");
+
           } catch (error) {
             console.error("Payment verification failed:", error);
 
@@ -269,179 +272,319 @@ console.log("Restaurant ID returned:", data.restaurant._id);
   }
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Restaurant Image */}
-      <img
-        src={restaurant.image}
-        alt={restaurant.name}
-        className="w-full h-64 object-cover rounded-lg"
-      />
-
-      {/* Restaurant Profile */}
-      <div className="mt-6 mb-4 border rounded-lg p-6">
-        <h1 className="text-3xl font-bold">{restaurant.name}</h1>
-
-        <p className="text-gray-600 mt-2">{restaurant.description}</p>
-
-        <div className="grid md:grid-cols-2 gap-4 mt-6">
-          <div>
-            <p className="font-semibold">Cuisine</p>
-
-            <p className="text-gray-600">{restaurant.cuisine}</p>
-          </div>
-
-          <div>
-            <p className="font-semibold">Location</p>
-
-            <p className="text-gray-600">{restaurant.location}</p>
-          </div>
-
-          <div>
-            <p className="font-semibold">Price Range</p>
-
-            <p className="text-gray-600">₹{restaurant.priceRange}</p>
-          </div>
-
-          <div>
-            <p className="font-semibold">Opening Hours</p>
-
-            <p className="text-gray-600">
-              {restaurant.openingHours || "Not available"}
-            </p>
-          </div>
-
-          <div>
-            <p className="font-semibold">Contact</p>
-
-            <p className="text-gray-600">
-              {restaurant.contactNumber || "Not available"}
-            </p>
-          </div>
-
-          <div>
-            <p className="font-semibold">Rating</p>
-
-            <p className="text-gray-600">⭐ {restaurant.averageRating || 0}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Restaurant Menu */}
-      <div className="border rounded-lg p-6 mb-8">
-        <h2 className="text-2xl font-bold mb-4">Menu</h2>
-
-        {restaurant.menu && restaurant.menu.length > 0 ? (
-          <div className="grid md:grid-cols-2 gap-4">
-            {restaurant.menu.map((item, index) => (
-              <div key={item._id || index} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-lg">{item.name}</h3>
-
-                  <span className="font-semibold">₹{item.price}</span>
+    <div className="min-h-screen bg-gray-50">
+      {" "}
+      <div className="container mx-auto px-4 md:px-6 py-8">
+        {" "}
+        {/* Restaurant Hero Image */}{" "}
+        <div className="relative overflow-hidden rounded-3xl shadow-xl">
+          {" "}
+          <img
+            src={restaurant.image}
+            alt={restaurant.name}
+            className="w-full h-72 md:h-96 object-cover"
+          />{" "}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>{" "}
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
+            {" "}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {" "}
+              <span className="bg-orange-600 px-3 py-1 rounded-full text-sm font-semibold">
+                {" "}
+                {restaurant.cuisine}{" "}
+              </span>{" "}
+              <span className="bg-white/90 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
+                {" "}
+                ⭐ {restaurant.averageRating || 0}{" "}
+              </span>{" "}
+            </div>{" "}
+            <h1 className="text-3xl md:text-5xl font-extrabold">
+              {" "}
+              {restaurant.name}{" "}
+            </h1>{" "}
+            <p className="mt-2 text-gray-200">
+              {" "}
+              📍 {restaurant.location}{" "}
+            </p>{" "}
+          </div>{" "}
+        </div>{" "}
+        {/* Restaurant Information */}{" "}
+        <div className="grid lg:grid-cols-3 gap-6 mt-8">
+          {" "}
+          {/* About Restaurant */}{" "}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border p-6 md:p-8">
+            {" "}
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              {" "}
+              About the Restaurant{" "}
+            </h2>{" "}
+            <p className="text-gray-600 leading-relaxed">
+              {" "}
+              {restaurant.description}{" "}
+            </p>{" "}
+            <div className="grid sm:grid-cols-2 gap-4 mt-6">
+              {" "}
+              <div className="bg-orange-50 rounded-xl p-4">
+                {" "}
+                <p className="text-sm text-gray-500">Cuisine</p>{" "}
+                <p className="font-semibold text-gray-900 mt-1">
+                  {" "}
+                  🍴 {restaurant.cuisine}{" "}
+                </p>{" "}
+              </div>{" "}
+              <div className="bg-orange-50 rounded-xl p-4">
+                {" "}
+                <p className="text-sm text-gray-500">Price Range</p>{" "}
+                <p className="font-semibold text-gray-900 mt-1">
+                  {" "}
+                  ₹{restaurant.priceRange}{" "}
+                </p>{" "}
+              </div>{" "}
+              <div className="bg-orange-50 rounded-xl p-4">
+                {" "}
+                <p className="text-sm text-gray-500">Opening Hours</p>{" "}
+                <p className="font-semibold text-gray-900 mt-1">
+                  {" "}
+                  🕐 {restaurant.openingHours || "Not available"}{" "}
+                </p>{" "}
+              </div>{" "}
+              <div className="bg-orange-50 rounded-xl p-4">
+                {" "}
+                <p className="text-sm text-gray-500">Contact</p>{" "}
+                <p className="font-semibold text-gray-900 mt-1">
+                  {" "}
+                  📞 {restaurant.contactNumber || "Not available"}{" "}
+                </p>{" "}
+              </div>{" "}
+            </div>{" "}
+          </div>{" "}
+          {/* Rating Card */}{" "}
+          <div className="bg-white rounded-2xl shadow-sm border p-6 flex flex-col justify-center items-center text-center">
+            {" "}
+            <div className="text-5xl mb-3">⭐</div>{" "}
+            <p className="text-4xl font-extrabold text-gray-900">
+              {" "}
+              {restaurant.averageRating || 0}{" "}
+            </p>{" "}
+            <p className="text-gray-500 mt-2"> Restaurant Rating </p>{" "}
+            <div className="mt-5 px-4 py-2 bg-orange-50 rounded-full text-orange-700 font-semibold">
+              {" "}
+              {restaurant.cuisine} Cuisine{" "}
+            </div>{" "}
+          </div>{" "}
+        </div>{" "}
+        {/* Restaurant Menu */}{" "}
+        <div className="bg-white rounded-2xl shadow-sm border p-6 md:p-8 mt-8">
+          {" "}
+          <div className="flex items-center justify-between mb-6">
+            {" "}
+            <div>
+              {" "}
+              <h2 className="text-2xl font-bold text-gray-900">
+                {" "}
+                Our Menu{" "}
+              </h2>{" "}
+              <p className="text-gray-500 mt-1">
+                {" "}
+                Explore delicious dishes from {restaurant.name}{" "}
+              </p>{" "}
+            </div>{" "}
+            <span className="hidden sm:block text-2xl"> 🍽️ </span>{" "}
+          </div>{" "}
+          {restaurant.menu && restaurant.menu.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {" "}
+              {restaurant.menu.map((item, index) => (
+                <div
+                  key={item._id || index}
+                  className="border border-gray-200 rounded-xl p-5 hover:border-orange-300 hover:shadow-md transition"
+                >
+                  {" "}
+                  <div className="flex justify-between items-start gap-4">
+                    {" "}
+                    <h3 className="font-bold text-lg text-gray-900">
+                      {" "}
+                      {item.name}{" "}
+                    </h3>{" "}
+                    <span className="bg-orange-50 text-orange-700 px-3 py-1 rounded-full font-bold whitespace-nowrap">
+                      {" "}
+                      ₹{item.price}{" "}
+                    </span>{" "}
+                  </div>{" "}
+                  <p className="text-gray-600 mt-3 text-sm leading-relaxed">
+                    {" "}
+                    {item.description}{" "}
+                  </p>{" "}
                 </div>
-
-                <p className="text-gray-600 mt-2">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-600">Menu information is not available.</p>
-        )}
-      </div>
-
-      <hr className="my-6" />
-
-      {/* Reservation */}
-      <h2 className="text-2xl font-bold mb-4">Book Your Table</h2>
-
-      <div className="grid md:grid-cols-3 gap-4">
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="border p-3 rounded"
-        />
-
-        <select
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="border p-3 rounded"
-        >
-          <option value="">Select Time</option>
-
-          <option value="12:00">12:00 PM</option>
-
-          <option value="13:00">1:00 PM</option>
-
-          <option value="19:00">7:00 PM</option>
-
-          <option value="20:00">8:00 PM</option>
-
-          <option value="21:00">9:00 PM</option>
-        </select>
-
-        <input
-          type="number"
-          min="1"
-          value={partySize}
-          onChange={(e) => setPartySize(Number(e.target.value))}
-          className="border p-3 rounded"
-        />
-      </div>
-
-      {/* Check Availability */}
-      <button
-        onClick={handleCheckAvailability}
-        className="bg-green-600 text-white px-6 py-3 rounded mt-4"
-      >
-        Check Availability
-      </button>
-
-      {/* Availability Result */}
-      {availability && (
-        <div className="mt-4 p-4 bg-gray-100 rounded">
-          {availability.available ? (
-            <p className="text-green-600 font-bold">
-              Table Available! You can book now.
-            </p>
+              ))}{" "}
+            </div>
           ) : (
-            <p className="text-red-600 font-bold">
-              Sorry, no availability for this time.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Payment Button */}
-      {availability?.available && (
-        <button
-          onClick={bookTable}
-          className="bg-blue-600 text-white px-6 py-3 rounded mt-4"
-        >
-          Confirm Reservation
-        </button>
-      )}
-
-      <hr className="my-8" />
-
-      {/* Review Form */}
-      <ReviewForm
-        reviewForm={reviewForm}
-        setReviewForm={setReviewForm}
-        editingReviewId={editingReviewId}
-        handleReviewSubmit={handleReviewSubmit}
-        handleUpdateReview={handleUpdateReview}
-        setEditingReviewId={setEditingReviewId}
-      />
-
-      {/* Review List */}
-      <ReviewList
-        reviews={reviews}
-        user={user}
-        handleEditReview={handleEditReview}
-        handleDeleteReview={handleDeleteReview}
-        fetchReviews={fetchReviews}
-      />
+            <div className="bg-gray-50 rounded-xl p-6 text-center">
+              {" "}
+              <p className="text-gray-500">
+                {" "}
+                Menu information is not available.{" "}
+              </p>{" "}
+            </div>
+          )}{" "}
+        </div>{" "}
+        {/* Reservation Section */}{" "}
+        <div className="mt-8 bg-white rounded-2xl shadow-sm border overflow-hidden">
+          {" "}
+          <div className="bg-gradient-to-r from-orange-600 to-amber-500 p-6 md:p-8 text-white">
+            {" "}
+            <p className="text-orange-100 text-sm font-semibold uppercase tracking-wide">
+              {" "}
+              Reserve your table{" "}
+            </p>{" "}
+            <h2 className="text-3xl font-extrabold mt-1">
+              {" "}
+              Book Your Table{" "}
+            </h2>{" "}
+            <p className="text-orange-50 mt-2">
+              {" "}
+              Choose your preferred date, time and number of guests.{" "}
+            </p>{" "}
+          </div>{" "}
+          <div className="p-6 md:p-8">
+            {" "}
+            <div className="grid md:grid-cols-3 gap-5">
+              {" "}
+              <div>
+                {" "}
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {" "}
+                  Date{" "}
+                </label>{" "}
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />{" "}
+              </div>{" "}
+              <div>
+                {" "}
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {" "}
+                  Time{" "}
+                </label>{" "}
+                <select
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  {" "}
+                  <option value="">Select Time</option>{" "}
+                  <option value="12:00">12:00 PM</option>{" "}
+                  <option value="13:00">1:00 PM</option>{" "}
+                  <option value="19:00">7:00 PM</option>{" "}
+                  <option value="20:00">8:00 PM</option>{" "}
+                  <option value="21:00">9:00 PM</option>{" "}
+                </select>{" "}
+              </div>{" "}
+              <div>
+                {" "}
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {" "}
+                  Guests{" "}
+                </label>{" "}
+                <input
+                  type="number"
+                  min="1"
+                  value={partySize}
+                  onChange={(e) => setPartySize(Number(e.target.value))}
+                  className="w-full border border-gray-300 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />{" "}
+              </div>{" "}
+            </div>{" "}
+            {/* Check Availability */}{" "}
+            <button
+              onClick={handleCheckAvailability}
+              className="mt-6 bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-800 transition shadow-sm"
+            >
+              {" "}
+              Check Availability{" "}
+            </button>{" "}
+            {/* Availability Result */}{" "}
+            {availability && (
+              <div
+                className={`mt-5 p-4 rounded-xl border ${availability.available ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}
+              >
+                {" "}
+                {availability.available ? (
+                  <div>
+                    {" "}
+                    <p className="text-green-700 font-bold">
+                      {" "}
+                      ✓ Table Available!{" "}
+                    </p>{" "}
+                    <p className="text-green-600 text-sm mt-1">
+                      {" "}
+                      Great! You can proceed with your reservation.{" "}
+                    </p>{" "}
+                  </div>
+                ) : (
+                  <div>
+                    {" "}
+                    <p className="text-red-700 font-bold">
+                      {" "}
+                      ✕ No Availability{" "}
+                    </p>{" "}
+                    <p className="text-red-600 text-sm mt-1">
+                      {" "}
+                      Sorry, there are no available tables for this time.{" "}
+                    </p>{" "}
+                  </div>
+                )}{" "}
+              </div>
+            )}{" "}
+            {/* Payment Button */}{" "}
+            {availability?.available && (
+              <button
+                onClick={bookTable}
+                className="mt-4 w-full md:w-auto bg-orange-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-700 transition shadow-md"
+              >
+                {" "}
+                💳 Confirm Reservation & Pay{" "}
+              </button>
+            )}{" "}
+          </div>{" "}
+        </div>{" "}
+        {/* Reviews */}{" "}
+        <div className="mt-8 bg-white rounded-2xl shadow-sm border p-6 md:p-8">
+          {" "}
+          <div className="mb-6">
+            {" "}
+            <h2 className="text-2xl font-bold text-gray-900">
+              {" "}
+              Customer Reviews{" "}
+            </h2>{" "}
+            <p className="text-gray-500 mt-1">
+              {" "}
+              See what other diners have to say about this restaurant.{" "}
+            </p>{" "}
+          </div>{" "}
+          <ReviewForm
+            reviewForm={reviewForm}
+            setReviewForm={setReviewForm}
+            editingReviewId={editingReviewId}
+            handleReviewSubmit={handleReviewSubmit}
+            handleUpdateReview={handleUpdateReview}
+            setEditingReviewId={setEditingReviewId}
+          />{" "}
+          <div className="mt-8 border-t pt-8">
+            {" "}
+            <ReviewList
+              reviews={reviews}
+              user={user}
+              handleEditReview={handleEditReview}
+              handleDeleteReview={handleDeleteReview}
+              fetchReviews={fetchReviews}
+            />{" "}
+          </div>{" "}
+        </div>{" "}
+      </div>{" "}
     </div>
   );
 };
