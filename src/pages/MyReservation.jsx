@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { updateReservation } from "../services/reservationService";
+import api from "../services/api";
 
 const MyReservation = () => {
   const [reservations, setReservations] = useState([]);
@@ -14,12 +15,7 @@ const MyReservation = () => {
 
   const fetchReservations = async () => {
     try {
-      const response = await axios.get(
-        "http://localhost:3001/api/v1/reservation/my",
-        {
-          withCredentials: true,
-        },
-      );
+      const response = await api.get("/reservation/my");
 
       setReservations(response.data.reservations);
     } catch (error) {
@@ -55,13 +51,7 @@ const MyReservation = () => {
   //handle cancel reservation
   const handleCancel = async (reservationId) => {
     try {
-      await axios.patch(
-        `http://localhost:3001/api/v1/reservation/${reservationId}`,
-        {},
-        {
-          withCredentials: true,
-        },
-      );
+     await api.patch(`/reservation/${reservationId}`);
 
       alert("Reservation cancelled successfully");
 

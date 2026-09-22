@@ -1,14 +1,14 @@
 import axios from "axios";
 import api from "./api";
-const API_URL = "http://localhost:3001/api/v1/restaurant";
+
 
 export const getRestaurants = async (params = {}) => {
-  const response = await axios.get(API_URL, { params });
+   const response = await api.get("/restaurant", { params });
   return response.data;
 };
 
 export const getRestaurantById = async (id) => {
-  const response = await axios.get(`${API_URL}/${id}`);
+   const response = await api.get(`/restaurant/${id}`);
   return response.data;
 };
 
