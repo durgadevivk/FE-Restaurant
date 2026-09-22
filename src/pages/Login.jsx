@@ -30,16 +30,14 @@ const Login = () => {
         // Store user in Redux
         dispatch(setUser(user));
 
-        console.log("Logged in user:", user);
-        console.log("Role:", user.role);
-
+        
         // Navigate based on role
         if (user.role === "admin") {
             navigate("/admin-dashboard");
         } else if (user.role === "restaurant_owner") {
             navigate("/owner-dashboard");
         } else {
-            navigate("/dashboard");
+            navigate("/");
         }
 
     } catch (error) {
