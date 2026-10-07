@@ -1,14 +1,18 @@
-
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setUser } from "../redux/authSlice";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const token = localStorage.getItem("token");
+  const user = useSelector((state) => state.auth.user);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
+    dispatch(setUser(null));
 
     navigate("/login");
   };
@@ -25,55 +29,84 @@ const Navbar = () => {
           🍽️ DineReserve
         </Link>
 
-        {/* Navigation Links */}
+        {/* Navigation */}
         <div className="flex items-center gap-2">
 
           <Link
             to="/"
-            className="px-4 py-2 rounded-lg text-gray-700 font-medium hover:bg-orange-50 hover:text-orange-600 transition"
+            className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
           >
             Home
           </Link>
 
           <Link
             to="/restaurants"
-            className="px-4 py-2 rounded-lg text-gray-700 font-medium hover:bg-orange-50 hover:text-orange-600 transition"
+            className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
           >
             Restaurants
           </Link>
 
-          {token && (
+          {/* Logged-in user */}
+          {user && (
             <Link
               to="/my-reservations"
-              className="px-4 py-2 rounded-lg text-gray-700 font-medium hover:bg-orange-50 hover:text-orange-600 transition"
+              className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
             >
               My Reservations
             </Link>
           )}
 
-          {!token ? (
+          {/* Restaurant Owner */}
+          {user?.role === "restaurant_owner" && (
+            <Link
+              to="/owner-dashboard"
+              className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+            >
+              Owner Dashboard
+            </Link>
+          )}
+
+          {/* Admin */}
+          {user?.role === "admin" && (
+            <Link
+              to="/admin-dashboard"
+              className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+            >
+              Admin Dashboard
+            </Link>
+          )}
+
+          {/* Login / Register */}
+          {!user ? (
             <>
               <Link
                 to="/login"
-                className="px-4 py-2 rounded-lg text-gray-700 font-medium hover:bg-orange-50 hover:text-orange-600 transition"
+                className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
               >
                 Login
               </Link>
 
               <Link
                 to="/register"
-                className="ml-2 bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold shadow-sm hover:bg-orange-700 hover:shadow-md transition"
+                className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition"
               >
                 Register
               </Link>
             </>
           ) : (
-            <button
-              onClick={handleLogout}
-              className="ml-2 bg-gray-900 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-800 transition shadow-sm"
-            >
-              Logout
-            </button>
+            <>
+              {/* User name */}
+              <span className="px-3 py-2 text-gray-700 font-medium">
+                Hi, {user.name}
+              </span>
+
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition"
+              >
+                Logout
+              </button>
+            </>
           )}
 
         </div>
