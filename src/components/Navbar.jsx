@@ -1,118 +1,136 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "../redux/authSlice";
+import { clearUser } from "../redux/authSlice";
+import { logoutUser } from "../services/authService";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
-  const user = useSelector((state) => state.auth.user);
+    const user = useSelector((state) => state.auth.user);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    const handleLogout = async () => {
+        try {
+            // Remove JWT cookie from backend
+            await logoutUser();
 
-    dispatch(setUser(null));
+            // Clear user from Redux
+            dispatch(clearUser());
 
-    navigate("/login");
-  };
+            toast.success("Logged out successfully");
 
-  return (
-    <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+            navigate("/login");
+        } catch (error) {
+            console.error("Logout error:", error);
 
-        {/* Logo */}
-        <Link
-          to="/"
-          className="text-2xl font-extrabold text-orange-600 tracking-tight hover:text-orange-700 transition"
-        >
-          🍽️ DineReserve
-        </Link>
+            // Clear Redux even if backend logout fails
+            dispatch(clearUser());
 
-        {/* Navigation */}
-        <div className="flex items-center gap-2">
+            navigate("/login");
+        }
+    };
 
-          <Link
-            to="/"
-            className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
-          >
-            Home
-          </Link>
+    return (
+        <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+            <div className="container mx-auto px-6 py-4 flex justify-between items-center">
 
-          <Link
-            to="/restaurants"
-            className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
-          >
-            Restaurants
-          </Link>
+                {/* Logo */}
+                <Link
+                    to="/"
+                    className="text-2xl font-extrabold text-orange-600 tracking-tight hover:text-orange-700 transition"
+                >
+                    🍽️ DineReserve
+                </Link>
 
-          {/* Logged-in user */}
-          {user && (
-            <Link
-              to="/my-reservations"
-              className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
-            >
-              My Reservations
-            </Link>
-          )}
+                {/* Navigation */}
+                <div className="flex items-center gap-2">
 
-          {/* Restaurant Owner */}
-          {user?.role === "restaurant_owner" && (
-            <Link
-              to="/owner-dashboard"
-              className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
-            >
-              Owner Dashboard
-            </Link>
-          )}
+                    {/* Home */}
+                    <Link
+                        to="/"
+                        className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+                    >
+                        Home
+                    </Link>
 
-          {/* Admin */}
-          {user?.role === "admin" && (
-            <Link
-              to="/admin-dashboard"
-              className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
-            >
-              Admin Dashboard
-            </Link>
-          )}
+                    {/* Restaurants */}
+                    <Link
+                        to="/restaurants"
+                        className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+                    >
+                        Restaurants
+                    </Link>
 
-          {/* Login / Register */}
-          {!user ? (
-            <>
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
-              >
-                Login
-              </Link>
+                    {/* Logged-in User */}
+                    {user && user.role === "user" && (
+                        <Link
+                            to="/my-reservations"
+                            className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+                        >
+                            My Reservations
+                        </Link>
+                    )}
 
-              <Link
-                to="/register"
-                className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition"
-              >
-                Register
-              </Link>
-            </>
-          ) : (
-            <>
-              {/* User name */}
-              <span className="px-3 py-2 text-gray-700 font-medium">
-                Hi, {user.name}
-              </span>
+                    {/* Restaurant Owner */}
+                    {user?.role === "restaurant_owner" && (
+                        <Link
+                            to="/owner-dashboard"
+                            className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+                        >
+                            Dashboard
+                        </Link>
+                    )}
 
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition"
-              >
-                Logout
-              </button>
-            </>
-          )}
+                    {/* Admin */}
+                    {user?.role === "admin" && (
+                        <Link
+                            to="/admin-dashboard"
+                            className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+                        >
+                            Admin Dashboard
+                        </Link>
+                    )}
 
-        </div>
-      </div>
-    </nav>
-  );
+                    {/* Logged Out */}
+                    {!user && (
+                        <>
+                            <Link
+                                to="/login"
+                                className="px-4 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+                            >
+                                Login
+                            </Link>
+
+                            <Link
+                                to="/register"
+                                className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 transition"
+                            >
+                                Register
+                            </Link>
+                        </>
+                    )}
+
+                    {/* Logged In */}
+                    {user && (
+                        <>
+                            <span className="px-3 py-2 text-gray-700 font-medium">
+                                Hi, {user.name}
+                            </span>
+
+                            <button
+                                onClick={handleLogout}
+                                className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition"
+                            >
+                                Logout
+                            </button>
+                        </>
+                    )}
+
+                </div>
+            </div>
+        </nav>
+    );
 };
 
 export default Navbar;

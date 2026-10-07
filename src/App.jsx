@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { setUser } from "./redux/authSlice";
+import { setUser, clearUser } from "./redux/authSlice";
 import { getCurrentUser } from "./services/authService";
 
 import Home from "./pages/Home";
@@ -13,48 +13,95 @@ import MyReservation from "./pages/MyReservation";
 import Navbar from "./components/Navbar";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
-  
-  const dispatch = useDispatch();
 
-  // Get logged-in user from Redux
-  const { user } = useSelector((state) => state.auth);
+    const dispatch = useDispatch();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const data = await getCurrentUser();
+    const { user } = useSelector((state) => state.auth);
 
-        dispatch(setUser(data.user));
-      } catch (error) {
-        dispatch(setUser(null));
-      }
-    };
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const data = await getCurrentUser();
 
-    fetchUser();
-  }, [dispatch]);
+                dispatch(setUser(data.user));
+            } catch (error) {
+                dispatch(clearUser());
+            }
+        };
 
-  return (
-    <BrowserRouter>
+        fetchUser();
+    }, [dispatch]);
 
-      {/* Show Navbar ONLY when user is NOT logged in */}
-      {!user && <Navbar />}
+    return (
+        <BrowserRouter>
 
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+            {/* Keep your current Navbar behavior for now */}
+            <Navbar />
 
-        <Route path="/" element={<Home />} />
-        <Route path="/restaurants" element={<Home />} />
-        <Route path="/restaurants/:id" element={<RestaurantDetails />} />
-        <Route path="/my-reservations" element={<MyReservation />} />
-        <Route path="/owner-dashboard" element={<OwnerDashboard />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-      </Routes>
+            <Routes>
 
-    </BrowserRouter>
-  );
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
+
+                <Route
+                    path="/register"
+                    element={<Register />}
+                />
+
+                <Route
+                    path="/"
+                    element={<Home />}
+                />
+
+                <Route
+                    path="/restaurants"
+                    element={<Home />}
+                />
+
+                <Route
+                    path="/restaurants/:id"
+                    element={<RestaurantDetails />}
+                />
+
+                {/* USER ONLY */}
+                <Route
+                    path="/my-reservations"
+                    element={
+                        <ProtectedRoute allowedRoles={["user"]}>
+                            <MyReservation />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* RESTAURANT OWNER ONLY */}
+                <Route
+                    path="/owner-dashboard"
+                    element={
+                        <ProtectedRoute allowedRoles={["restaurant_owner"]}>
+                            <OwnerDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* ADMIN ONLY */}
+                <Route
+                    path="/admin-dashboard"
+                    element={
+                        <ProtectedRoute allowedRoles={["admin"]}>
+                            <AdminDashboard />
+                        </ProtectedRoute>
+                    }
+                />
+
+            </Routes>
+
+        </BrowserRouter>
+    );
 }
 
 export default App;

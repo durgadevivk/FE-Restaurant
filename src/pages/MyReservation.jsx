@@ -1,7 +1,20 @@
-
 import { useEffect, useState } from "react";
-import { updateReservation } from "../services/reservationService";
-import api from "../services/api";
+import {
+  updateReservation,
+  cancelReservation,
+  getMyReservations,
+} from "../services/reservationService";
+
+// Check whether the reservation date + time has already passed
+const isReservationPast = (reservation) => {
+  const reservationDate = new Date(reservation.date);
+
+  const [hours, minutes] = reservation.time.split(":").map(Number);
+
+  reservationDate.setHours(hours, minutes, 0, 0);
+
+  return reservationDate < new Date();
+};
 
 const MyReservation = () => {
   const [reservations, setReservations] = useState([]);
@@ -14,11 +27,12 @@ const MyReservation = () => {
     partySize: 2,
   });
 
+  // Fetch user's reservations
   const fetchReservations = async () => {
     try {
-      const response = await api.get("/reservation/my");
+      const response = await getMyReservations();
 
-      setReservations(response.data.reservations);
+      setReservations(response.reservations);
     } catch (error) {
       console.error("Failed to fetch reservations", error);
     } finally {
@@ -26,7 +40,15 @@ const MyReservation = () => {
     }
   };
 
+  // Start editing
   const handleEdit = (reservation) => {
+    // Extra protection:
+    // Do not allow editing past reservations
+    if (isReservationPast(reservation)) {
+      alert("Past reservations cannot be edited.");
+      return;
+    }
+
     setEditingId(reservation._id);
 
     setEditForm({
@@ -36,6 +58,7 @@ const MyReservation = () => {
     });
   };
 
+  // Update reservation
   const handleUpdate = async (reservationId) => {
     try {
       await updateReservation(reservationId, editForm);
@@ -44,28 +67,38 @@ const MyReservation = () => {
 
       setEditingId(null);
 
-      fetchReservations();
+      await fetchReservations();
     } catch (error) {
       console.error("Failed to update reservation", error);
 
       alert(
-        error.response?.data?.message || "Failed to update reservation"
+        error.response?.data?.message ||
+          "Failed to update reservation"
       );
     }
   };
 
-  // Handle cancel reservation
-  const handleCancel = async (reservationId) => {
+  // Cancel reservation
+  const handleCancel = async (reservation) => {
+    // Extra frontend protection
+    if (isReservationPast(reservation)) {
+      alert("Past reservations cannot be cancelled.");
+      return;
+    }
+
     try {
-      await api.patch(`/reservation/${reservationId}`);
+      await cancelReservation(reservation._id);
 
       alert("Reservation cancelled successfully");
 
-      fetchReservations();
+      await fetchReservations();
     } catch (error) {
       console.error("Failed to cancel reservation", error);
 
-      alert("Failed to cancel reservation");
+      alert(
+        error.response?.data?.message ||
+          "Failed to cancel reservation"
+      );
     }
   };
 
@@ -117,7 +150,7 @@ const MyReservation = () => {
           </h1>
 
           <p className="text-gray-500 mt-2">
-            View, update or cancel your upcoming restaurant reservations.
+            View and manage your upcoming restaurant reservations.
           </p>
 
         </div>
@@ -135,251 +168,339 @@ const MyReservation = () => {
             </h2>
 
             <p className="text-gray-500 mt-2">
-              You haven't booked a table yet. Explore our restaurants and
-              reserve your next dining experience.
+              You haven't booked a table yet. Explore our restaurants
+              and reserve your next dining experience.
             </p>
 
           </div>
         ) : (
+
           <div className="grid md:grid-cols-2 gap-6">
 
-            {reservations.map((reservation) => (
+            {reservations.map((reservation) => {
 
-              <div
-                key={reservation._id}
-                className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition overflow-hidden"
-              >
+              // Check whether this particular reservation is past
+              const isPast = isReservationPast(reservation);
 
-                {/* Card Header */}
-                <div className="bg-gradient-to-r from-orange-600 to-amber-500 p-5 text-white">
+              return (
+                <div
+                  key={reservation._id}
+                  className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition overflow-hidden"
+                >
 
-                  <div className="flex justify-between items-start gap-3">
+                  {/* Card Header */}
+                  <div className="bg-gradient-to-r from-orange-600 to-amber-500 p-5 text-white">
 
-                    <div>
-                      <h2 className="text-xl font-bold">
-                        {reservation.restaurant?.name}
-                      </h2>
-
-                      <p className="text-orange-100 text-sm mt-1">
-                        {reservation.restaurant?.cuisine}
-                      </p>
-                    </div>
-
-                    {/* Status */}
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                        reservation.status === "confirmed"
-                          ? "bg-green-100 text-green-700"
-                          : reservation.status === "cancelled"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      {reservation.status}
-                    </span>
-
-                  </div>
-
-                </div>
-
-                {/* Reservation Details */}
-                <div className="p-5">
-
-                  <div className="space-y-3 text-gray-700">
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">📍</span>
+                    <div className="flex justify-between items-start gap-3">
 
                       <div>
-                        <p className="text-xs text-gray-400 uppercase">
-                          Location
-                        </p>
+                        <h2 className="text-xl font-bold">
+                          {reservation.restaurant?.name}
+                        </h2>
 
-                        <p className="font-medium">
-                          {reservation.restaurant?.location}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">📅</span>
-
-                      <div>
-                        <p className="text-xs text-gray-400 uppercase">
-                          Date
-                        </p>
-
-                        <p className="font-medium">
-                          {new Date(
-                            reservation.date
-                          ).toLocaleDateString()}
+                        <p className="text-orange-100 text-sm mt-1">
+                          {reservation.restaurant?.cuisine}
                         </p>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">🕐</span>
+                      {/* Status */}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                          reservation.status === "confirmed"
+                            ? "bg-green-100 text-green-700"
+                            : reservation.status === "cancelled"
+                            ? "bg-red-100 text-red-700"
+                            : reservation.status === "rejected"
+                            ? "bg-gray-100 text-gray-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {reservation.status}
+                      </span>
 
-                      <div>
-                        <p className="text-xs text-gray-400 uppercase">
-                          Time
-                        </p>
-
-                        <p className="font-medium">
-                          {reservation.time}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">👥</span>
-
-                      <div>
-                        <p className="text-xs text-gray-400 uppercase">
-                          Guests
-                        </p>
-
-                        <p className="font-medium">
-                          {reservation.partySize}
-                        </p>
-                      </div>
                     </div>
 
                   </div>
 
-                  {/* Edit Form */}
-                  {editingId === reservation._id && (
+                  {/* Reservation Details */}
+                  <div className="p-5">
 
-                    <div className="mt-6 border-t pt-5">
+                    <div className="space-y-3 text-gray-700">
 
-                      <h3 className="font-bold text-lg text-gray-900 mb-4">
-                        Update Reservation
-                      </h3>
-
-                      <div className="space-y-4">
+                      {/* Location */}
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">📍</span>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          <p className="text-xs text-gray-400 uppercase">
+                            Location
+                          </p>
+
+                          <p className="font-medium">
+                            {reservation.restaurant?.location}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Date */}
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">📅</span>
+
+                        <div>
+                          <p className="text-xs text-gray-400 uppercase">
                             Date
-                          </label>
+                          </p>
 
-                          <input
-                            type="date"
-                            value={editForm.date}
-                            onChange={(e) =>
-                              setEditForm({
-                                ...editForm,
-                                date: e.target.value,
-                              })
-                            }
-                            className="border border-gray-300 p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          />
+                          <p className="font-medium">
+                            {new Date(
+                              reservation.date
+                            ).toLocaleDateString()}
+                          </p>
                         </div>
+                      </div>
+
+                      {/* Time */}
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">🕐</span>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          <p className="text-xs text-gray-400 uppercase">
                             Time
-                          </label>
+                          </p>
 
-                          <select
-                            value={editForm.time}
-                            onChange={(e) =>
-                              setEditForm({
-                                ...editForm,
-                                time: e.target.value,
-                              })
-                            }
-                            className="border border-gray-300 p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          >
-                            <option value="12:00">12:00 PM</option>
-                            <option value="13:00">1:00 PM</option>
-                            <option value="19:00">7:00 PM</option>
-                            <option value="20:00">8:00 PM</option>
-                            <option value="21:00">9:00 PM</option>
-                          </select>
+                          <p className="font-medium">
+                            {reservation.time}
+                          </p>
                         </div>
+                      </div>
+
+                      {/* Guests */}
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">👥</span>
 
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          <p className="text-xs text-gray-400 uppercase">
                             Guests
-                          </label>
+                          </p>
 
-                          <input
-                            type="number"
-                            min="1"
-                            value={editForm.partySize}
-                            onChange={(e) =>
-                              setEditForm({
-                                ...editForm,
-                                partySize: Number(e.target.value),
-                              })
-                            }
-                            className="border border-gray-300 p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          />
+                          <p className="font-medium">
+                            {reservation.partySize}
+                          </p>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* =========================================
+                        EDIT FORM
+                    ========================================== */}
+
+                    {editingId === reservation._id && !isPast && (
+
+                      <div className="mt-6 border-t pt-5">
+
+                        <h3 className="font-bold text-lg text-gray-900 mb-4">
+                          Update Reservation
+                        </h3>
+
+                        <div className="space-y-4">
+
+                          {/* Date */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                              Date
+                            </label>
+
+                            <input
+                              type="date"
+                              value={editForm.date}
+                              min={new Date()
+                                .toISOString()
+                                .split("T")[0]}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  date: e.target.value,
+                                })
+                              }
+                              className="border border-gray-300 p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            />
+                          </div>
+
+                          {/* Time */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                              Time
+                            </label>
+
+                            <select
+                              value={editForm.time}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  time: e.target.value,
+                                })
+                              }
+                              className="border border-gray-300 p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            >
+                              <option value="12:00">
+                                12:00 PM
+                              </option>
+
+                              <option value="13:00">
+                                1:00 PM
+                              </option>
+
+                              <option value="19:00">
+                                7:00 PM
+                              </option>
+
+                              <option value="20:00">
+                                8:00 PM
+                              </option>
+
+                              <option value="21:00">
+                                9:00 PM
+                              </option>
+                            </select>
+                          </div>
+
+                          {/* Guests */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                              Guests
+                            </label>
+
+                            <input
+                              type="number"
+                              min="1"
+                              value={editForm.partySize}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  partySize: Number(
+                                    e.target.value
+                                  ),
+                                })
+                              }
+                              className="border border-gray-300 p-3 rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            />
+                          </div>
+
+                          {/* Edit Buttons */}
+                          <div className="flex flex-wrap gap-2">
+
+                            <button
+                              onClick={() =>
+                                handleUpdate(reservation._id)
+                              }
+                              className="bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-orange-700 transition"
+                            >
+                              Save Changes
+                            </button>
+
+                            <button
+                              onClick={() =>
+                                setEditingId(null)
+                              }
+                              className="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition"
+                            >
+                              Cancel Edit
+                            </button>
+
+                          </div>
+
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                      </div>
+                    )}
 
+                    {/* =========================================
+                        ACTION BUTTONS
+                    ========================================== */}
+
+                    {!isPast &&
+                      reservation.status !== "cancelled" &&
+                      reservation.status !== "rejected" && (
+
+                        <div className="flex flex-wrap gap-3 mt-6 pt-5 border-t">
+
+                          {/* Edit */}
                           <button
                             onClick={() =>
-                              handleUpdate(reservation._id)
+                              handleEdit(reservation)
                             }
-                            className="bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-orange-700 transition"
+                            className="flex-1 min-w-[120px] border border-orange-600 text-orange-600 px-4 py-2.5 rounded-xl font-semibold hover:bg-orange-50 transition"
                           >
-                            Save Changes
+                            ✏️ Edit
                           </button>
 
+                          {/* Cancel */}
                           <button
-                            onClick={() => setEditingId(null)}
-                            className="bg-gray-100 text-gray-700 px-5 py-2.5 rounded-xl font-semibold hover:bg-gray-200 transition"
+                            onClick={() =>
+                              handleCancel(reservation)
+                            }
+                            className="flex-1 min-w-[120px] bg-red-500 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-red-600 transition"
                           >
-                            Cancel Edit
+                            Cancel Booking
                           </button>
 
                         </div>
+                      )}
+
+                    {/* =========================================
+                        PAST RESERVATION MESSAGE
+                    ========================================== */}
+
+                    {isPast &&
+                      reservation.status !== "cancelled" &&
+                      reservation.status !== "rejected" && (
+
+                        <div className="mt-5 pt-4 border-t">
+
+                          <p className="text-sm text-gray-500">
+                            ⏰ This reservation has already passed.
+                            It can no longer be edited or cancelled.
+                          </p>
+
+                        </div>
+                      )}
+
+                    {/* =========================================
+                        CANCELLED MESSAGE
+                    ========================================== */}
+
+                    {reservation.status === "cancelled" && (
+
+                      <div className="mt-5 pt-4 border-t">
+
+                        <p className="text-sm text-red-500">
+                          This reservation has been cancelled.
+                        </p>
 
                       </div>
+                    )}
 
-                    </div>
-                  )}
+                    {/* =========================================
+                        REJECTED MESSAGE
+                    ========================================== */}
 
-                  {/* Action Buttons */}
-                  {reservation.status !== "cancelled" && (
-                    <div className="flex flex-wrap gap-3 mt-6 pt-5 border-t">
+                    {reservation.status === "rejected" && (
 
-                      <button
-                        onClick={() => handleEdit(reservation)}
-                        className="flex-1 min-w-[120px] border border-orange-600 text-orange-600 px-4 py-2.5 rounded-xl font-semibold hover:bg-orange-50 transition"
-                      >
-                        ✏️ Edit
-                      </button>
+                      <div className="mt-5 pt-4 border-t">
 
-                      <button
-                        onClick={() =>
-                          handleCancel(reservation._id)
-                        }
-                        className="flex-1 min-w-[120px] bg-red-500 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-red-600 transition"
-                      >
-                        Cancel Booking
-                      </button>
+                        <p className="text-sm text-gray-500">
+                          This reservation was rejected.
+                        </p>
 
-                    </div>
-                  )}
+                      </div>
+                    )}
 
-                  {/* Cancelled Message */}
-                  {reservation.status === "cancelled" && (
-                    <div className="mt-5 pt-4 border-t">
-                      <p className="text-sm text-gray-500">
-                        This reservation has been cancelled.
-                      </p>
-                    </div>
-                  )}
+                  </div>
 
                 </div>
-
-              </div>
-
-            ))}
+              );
+            })}
 
           </div>
         )}
@@ -390,4 +511,3 @@ const MyReservation = () => {
 };
 
 export default MyReservation;
-
