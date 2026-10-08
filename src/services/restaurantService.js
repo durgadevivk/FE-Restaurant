@@ -1,4 +1,4 @@
-import axios from "axios";
+
 import api from "./api";
 
 
@@ -9,6 +9,10 @@ export const getRestaurants = async (params = {}) => {
 
 export const getRestaurantById = async (id) => {
    const response = await api.get(`/restaurant/${id}`);
+  return response.data;
+};
+export const deleteRestaurant = async (id) => {
+  const response = await api.delete(`/restaurant/${id}`);
   return response.data;
 };
 

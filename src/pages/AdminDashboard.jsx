@@ -1,110 +1,114 @@
-import { useEffect, useState } from "react";
-import api from "../services/api";
-import { useSelector } from "react-redux";
+import { useState } from "react";
+import ReservationManagement from "../components/admin/ReservationManagement";
+import RestaurantManagement from "../components/admin/RestaurantManagement";
 
 const AdminDashboard = () => {
-  const user = useSelector((state) => state.auth.user);
-
-  console.log("ADMIN USER:", user);
-  const [reservations, setReservations] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchReservations = async () => {
-    try {
-      const response = await api.get("/reservation/admin/all");
-      console.log("ADMIN RESPONSE:", response.data);
-
-      setReservations(response.data.reservations || []);
-    } catch (error) {
-      console.error("Failed to fetch reservations", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const handleConfirm = async (id) => {
-    try {
-      await api.patch(`/reservation/admin/${id}/confirm`);
-
-      alert("Reservation confirmed");
-
-      fetchReservations();
-    } catch (error) {
-      console.error("Failed to confirm reservation", error);
-      alert("Failed to confirm reservation");
-    }
-  };
-
-  const handleReject = async (id) => {
-    try {
-      await api.patch(`/reservation/admin/${id}/reject`);
-
-      alert("Reservation rejected");
-
-      fetchReservations();
-    } catch (error) {
-      console.error("Failed to reject reservation", error);
-      alert("Failed to reject reservation");
-    }
-  };
-  useEffect(() => {
-    fetchReservations();
-  }, []);
-
-  if (loading) {
-    return <p className="p-6">Loading reservations...</p>;
-  }
+  const [activeTab, setActiveTab] = useState("reservations");
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
 
-      <h2 className="text-2xl font-bold mb-4">All Reservations</h2>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">
+            Admin Dashboard
+          </h1>
 
-      {reservations.length === 0 ? (
-        <p>No reservations found.</p>
-      ) : (
-        <div className="space-y-4">
-          {reservations.map((reservation) => (
-            <div key={reservation._id} className="border rounded-lg p-5">
-              <h3 className="text-xl font-bold">
-                {reservation.restaurant?.name}
-              </h3>
-
-              <p>Date: {new Date(reservation.date).toLocaleDateString()}</p>
-
-              <p>Time: {reservation.time}</p>
-
-              <p>Party Size: {reservation.partySize}</p>
-
-              <p>
-                Status:{" "}
-                <span className="font-semibold">{reservation.status}</span>
-              </p>
-              <div className="mt-4 flex gap-3">
-                {reservation.status !== "confirmed" &&
-                  reservation.status !== "rejected" &&
-                  reservation.status !== "cancelled" && (
-                    <>
-                      <button
-                        onClick={() => handleConfirm(reservation._id)}
-                        className="bg-green-600 text-white px-4 py-2 rounded"
-                      >
-                        Confirm
-                      </button>
-
-                      <button
-                        onClick={() => handleReject(reservation._id)}
-                        className="bg-red-600 text-white px-4 py-2 rounded"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  )}
-              </div>
-            </div>
-          ))}
+          <p className="text-gray-500 mt-1">
+            Manage restaurants, reservations and reviews
+          </p>
         </div>
-      )}
+
+        {/* Navigation Tabs */}
+        <div className="bg-white rounded-xl shadow-sm border p-2 mb-6 flex flex-wrap gap-2">
+
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-5 py-2.5 rounded-lg font-semibold ${
+              activeTab === "overview"
+                ? "bg-orange-600 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Overview
+          </button>
+
+          <button
+            onClick={() => setActiveTab("restaurants")}
+            className={`px-5 py-2.5 rounded-lg font-semibold ${
+              activeTab === "restaurants"
+                ? "bg-orange-600 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Restaurants
+          </button>
+
+          <button
+            onClick={() => setActiveTab("reservations")}
+            className={`px-5 py-2.5 rounded-lg font-semibold ${
+              activeTab === "reservations"
+                ? "bg-orange-600 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Reservations
+          </button>
+
+          <button
+            onClick={() => setActiveTab("reviews")}
+            className={`px-5 py-2.5 rounded-lg font-semibold ${
+              activeTab === "reviews"
+                ? "bg-orange-600 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            Reviews
+          </button>
+        </div>
+
+        {/* Content */}
+        <div>
+
+          {/* Overview */}
+          {activeTab === "overview" && (
+            <div className="bg-white rounded-xl border p-6">
+              <h2 className="text-2xl font-bold mb-2">
+                Admin Overview
+              </h2>
+
+              <p className="text-gray-500">
+                Dashboard overview will be displayed here.
+              </p>
+            </div>
+          )}
+
+          {/* Restaurant Management */}
+          {activeTab === "restaurants" && (
+            <RestaurantManagement />
+          )}
+
+          {/* Reservation Management */}
+          {activeTab === "reservations" && (
+            <ReservationManagement />
+          )}
+
+          {/* Review Management */}
+          {activeTab === "reviews" && (
+            <div className="bg-white rounded-xl border p-6">
+              <h2 className="text-2xl font-bold mb-2">
+                Review Management
+              </h2>
+
+              <p className="text-gray-500">
+                Review management will be added here.
+              </p>
+            </div>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 };
