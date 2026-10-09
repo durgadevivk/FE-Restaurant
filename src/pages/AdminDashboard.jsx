@@ -1,9 +1,47 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReservationManagement from "../components/admin/ReservationManagement";
 import RestaurantManagement from "../components/admin/RestaurantManagement";
+import ReviewManagement from "../components/admin/ReviewManagement";
+import api from "../services/api";
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState("reservations");
+  const [activeTab, setActiveTab] = useState("overview");
+
+  const [restaurantCount, setRestaurantCount] = useState(0);
+  const [reservationCount, setReservationCount] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+
+  const fetchOverview = async () => {
+  try {
+    // Get all restaurants
+    const restaurantResponse = await api.get("/restaurant");
+
+    setRestaurantCount(
+      restaurantResponse.data.restaurants?.length || 0
+    );
+
+    // Get all reservations - ADMIN API
+    const reservationResponse = await api.get("/reservation/admin/all");
+
+    setReservationCount(
+      reservationResponse.data.reservations?.length || 0
+    );
+
+    // Get all reviews - ADMIN API
+    const reviewResponse = await api.get("/review/admin/all");
+
+    setReviewCount(
+      reviewResponse.data.reviews?.length || 0
+    );
+
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+  }
+};
+
+  useEffect(() => {
+    fetchOverview();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -66,48 +104,74 @@ const AdminDashboard = () => {
           >
             Reviews
           </button>
+
         </div>
 
         {/* Content */}
-        <div>
 
-          {/* Overview */}
-          {activeTab === "overview" && (
-            <div className="bg-white rounded-xl border p-6">
-              <h2 className="text-2xl font-bold mb-2">
-                Admin Overview
-              </h2>
+        {/* Overview */}
+        {activeTab === "overview" && (
+          <div>
 
-              <p className="text-gray-500">
-                Dashboard overview will be displayed here.
-              </p>
+            <h2 className="text-2xl font-bold mb-5">
+              Admin Overview
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+              {/* Restaurants */}
+              <div className="bg-white rounded-xl border p-6 shadow-sm">
+                <p className="text-gray-500">
+                  Total Restaurants
+                </p>
+
+                <h3 className="text-3xl font-bold mt-2">
+                  {restaurantCount}
+                </h3>
+              </div>
+
+              {/* Reservations */}
+              <div className="bg-white rounded-xl border p-6 shadow-sm">
+                <p className="text-gray-500">
+                  Total Reservations
+                </p>
+
+                <h3 className="text-3xl font-bold mt-2">
+                  {reservationCount}
+                </h3>
+              </div>
+
+              {/* Reviews */}
+              <div className="bg-white rounded-xl border p-6 shadow-sm">
+                <p className="text-gray-500">
+                  Total Reviews
+                </p>
+
+                <h3 className="text-3xl font-bold mt-2">
+                  {reviewCount}
+                </h3>
+              </div>
+
             </div>
-          )}
 
-          {/* Restaurant Management */}
-          {activeTab === "restaurants" && (
-            <RestaurantManagement />
-          )}
+          </div>
+        )}
 
-          {/* Reservation Management */}
-          {activeTab === "reservations" && (
-            <ReservationManagement />
-          )}
+        {/* Restaurants */}
+        {activeTab === "restaurants" && (
+          <RestaurantManagement />
+        )}
 
-          {/* Review Management */}
-          {activeTab === "reviews" && (
-            <div className="bg-white rounded-xl border p-6">
-              <h2 className="text-2xl font-bold mb-2">
-                Review Management
-              </h2>
+        {/* Reservations */}
+        {activeTab === "reservations" && (
+          <ReservationManagement />
+        )}
 
-              <p className="text-gray-500">
-                Review management will be added here.
-              </p>
-            </div>
-          )}
+        {/* Reviews */}
+        {activeTab === "reviews" && (
+          <ReviewManagement />
+        )}
 
-        </div>
       </div>
     </div>
   );

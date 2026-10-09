@@ -49,12 +49,9 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
         },
       ];
 
-      const data = await updateRestaurant(
-        restaurant._id,
-        {
-          menu: updatedMenu,
-        }
-      );
+      const data = await updateRestaurant(restaurant._id, {
+        menu: updatedMenu,
+      });
 
       setRestaurant(data.restaurant);
 
@@ -92,12 +89,9 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
         image: form.image,
       };
 
-      const data = await updateRestaurant(
-        restaurant._id,
-        {
-          menu: updatedMenu,
-        }
-      );
+      const data = await updateRestaurant(restaurant._id, {
+        menu: updatedMenu,
+      });
 
       setRestaurant(data.restaurant);
 
@@ -112,22 +106,19 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
 
   const handleDelete = async (index) => {
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this menu item?"
+      "Are you sure you want to delete this menu item?",
     );
 
     if (!confirmDelete) return;
 
     try {
       const updatedMenu = restaurant.menu.filter(
-        (_, itemIndex) => itemIndex !== index
+        (_, itemIndex) => itemIndex !== index,
       );
 
-      const data = await updateRestaurant(
-        restaurant._id,
-        {
-          menu: updatedMenu,
-        }
-      );
+      const data = await updateRestaurant(restaurant._id, {
+        menu: updatedMenu,
+      });
 
       setRestaurant(data.restaurant);
 
@@ -140,17 +131,11 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
 
   return (
     <div className="bg-white rounded-2xl border shadow-sm p-6">
-
       <div className="flex justify-between items-center mb-6">
-
         <div>
-          <h2 className="text-2xl font-bold">
-            Menu Management
-          </h2>
+          <h2 className="text-2xl font-bold">Menu Management</h2>
 
-          <p className="text-gray-500 mt-1">
-            Add, edit or remove menu items.
-          </p>
+          <p className="text-gray-500 mt-1">Add, edit or remove menu items.</p>
         </div>
 
         {!isAdding && editingIndex === null && (
@@ -161,22 +146,17 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
             + Add Item
           </button>
         )}
-
       </div>
 
       {/* Add/Edit Form */}
 
       {(isAdding || editingIndex !== null) && (
         <div className="border rounded-xl p-5 mb-6 bg-gray-50">
-
           <h3 className="font-bold text-lg mb-4">
-            {editingIndex !== null
-              ? "Edit Menu Item"
-              : "Add Menu Item"}
+            {editingIndex !== null ? "Edit Menu Item" : "Add Menu Item"}
           </h3>
 
           <div className="space-y-4">
-
             <input
               type="text"
               name="name"
@@ -204,17 +184,34 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
               className="border p-3 rounded-xl w-full"
             />
 
-            <input
-              type="text"
-              name="image"
-              placeholder="Food image URL"
-              value={form.image}
-              onChange={handleChange}
-              className="border p-3 rounded-xl w-full"
-            />
+            <div>
+              <label className="block font-medium mb-2">Food Image URL</label>
+
+              <input
+                type="url"
+                name="image"
+                placeholder="https://example.com/food.jpg"
+                value={form.image}
+                onChange={handleChange}
+                className="border p-3 rounded-xl w-full"
+              />
+
+              {form.image && (
+                <img
+                  src={form.image}
+                  alt="Food preview"
+                  className="mt-3 h-40 w-60 rounded-xl object-cover border"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                  onLoad={(e) => {
+                    e.currentTarget.style.display = "block";
+                  }}
+                />
+              )}
+            </div>
 
             <div className="flex gap-3">
-
               <button
                 onClick={resetForm}
                 className="bg-gray-200 px-5 py-2.5 rounded-xl font-semibold"
@@ -237,9 +234,7 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
                   Add Item
                 </button>
               )}
-
             </div>
-
           </div>
         </div>
       )}
@@ -248,41 +243,36 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
 
       {restaurant.menu?.length > 0 ? (
         <div className="grid md:grid-cols-2 gap-4">
-
           {restaurant.menu.map((item, index) => (
             <div
               key={item._id || index}
               className="border rounded-xl overflow-hidden bg-white"
             >
-
-              {item.image && (
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-40 object-cover"
-                />
-              )}
+              <img
+                src={
+                  item.image || "https://placehold.co/600x400?text=Food+Image"
+                }
+                alt={item.name}
+                className="w-full h-40 object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src =
+                    "https://placehold.co/600x400?text=Food+Image";
+                }}
+              />
 
               <div className="p-4">
-
                 <div className="flex justify-between gap-3">
-
-                  <h3 className="font-bold text-lg">
-                    {item.name}
-                  </h3>
+                  <h3 className="font-bold text-lg">{item.name}</h3>
 
                   <span className="font-bold text-orange-600">
                     ₹{item.price}
                   </span>
-
                 </div>
 
-                <p className="text-gray-500 mt-2">
-                  {item.description}
-                </p>
+                <p className="text-gray-500 mt-2">{item.description}</p>
 
                 <div className="flex gap-2 mt-4">
-
                   <button
                     onClick={() => handleEdit(item, index)}
                     className="border border-orange-600 text-orange-600 px-4 py-2 rounded-lg"
@@ -296,21 +286,16 @@ const MenuManager = ({ restaurant, setRestaurant }) => {
                   >
                     🗑️ Delete
                   </button>
-
                 </div>
-
               </div>
-
             </div>
           ))}
-
         </div>
       ) : (
         <div className="text-center py-10 text-gray-500">
           No menu items yet.
         </div>
       )}
-
     </div>
   );
 };

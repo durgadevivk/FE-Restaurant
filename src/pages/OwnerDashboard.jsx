@@ -6,6 +6,8 @@ import { getOwnerRestaurant } from "../services/restaurantService";
 import OwnerHeader from "../components/owner/OwnerHeader";
 import RestaurantInfo from "../components/owner/RestaurantInfo";
 import MenuManager from "../components/owner/MenuManager";
+import RestaurantProfileForm from "../components/owner/RestaurantProfileForm";
+import RestaurantImageUpload from "../components/owner/RestaurantImageUpload";
 
 const OwnerDashboard = () => {
   const user = useSelector((state) => state.auth.user);
@@ -40,9 +42,7 @@ const OwnerDashboard = () => {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-6xl mx-auto bg-white rounded-xl p-6">
-          <h2 className="text-xl font-bold">
-            No restaurant found
-          </h2>
+          <h2 className="text-xl font-bold">No restaurant found</h2>
 
           <p className="text-gray-500 mt-2">
             No restaurant is associated with your account.
@@ -55,19 +55,20 @@ const OwnerDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
-
         <OwnerHeader user={user} restaurant={restaurant} />
-
-        <RestaurantInfo
+        <RestaurantImageUpload
           restaurant={restaurant}
           setRestaurant={setRestaurant}
         />
 
-        <MenuManager
+        <RestaurantProfileForm
           restaurant={restaurant}
           setRestaurant={setRestaurant}
         />
 
+        <RestaurantInfo restaurant={restaurant} setRestaurant={setRestaurant} />
+
+        <MenuManager restaurant={restaurant} setRestaurant={setRestaurant} />
       </div>
     </div>
   );
