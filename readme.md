@@ -61,6 +61,7 @@ Use the following credentials to test the different user roles in the applicatio
 | Admin | devi@gmail.com | devi@123 |
 | Admin | admin@gmail.com | admin@123 |
 | Restaurant Owner | sent@gmail.com | sent@123 |
+| Restaurant Owner | sudar@123 | sent@123 |
 
 > **Note:** These credentials are provided for demo/testing purposes only.
 
